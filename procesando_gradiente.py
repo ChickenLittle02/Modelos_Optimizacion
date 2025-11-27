@@ -64,8 +64,9 @@ def analizar_csv_gradiente(path_csv):
         resumen_md.append("\n---\n")
 
     # Guardar el archivo .md
-    with open("analisis_lr_regiones.md", "w") as f:
+    with open("analisis_lr_regiones.md", "w", encoding="utf-8") as f:
         f.write("\n".join(resumen_md))
+
 
     print("✔ Archivo generado: analisis_lr_regiones.md")
 
