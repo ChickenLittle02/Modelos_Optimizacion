@@ -86,18 +86,8 @@ en estas regiones donde la Hessiana es definida positiva, la función tiene curv
 
 En cambio, cuando la Hessiana posee valores negativos (como ocurre en la región $0 < x < 2$), la función presenta curvatura negativa en alguna dirección, generando zonas tipo silla de montar. Allí los métodos de optimización tienen comportamientos menos predecibles: el método de Gradiente puede oscilar o avanzar muy lentamente debido a cambios abruptos en la pendiente, mientras que el método de Newton puede producir pasos en direcciones incorrectas, dirigirse hacia un máximo local o incluso divergir por completo. Esto se debe a que la inversión del Hessiano introduce direcciones inestables cuando existen eigenvalores negativos.
 
-Por este motivo, en regiones no convexas es más probable que los métodos queden atrapados en mínimos locales o se comporten de manera errática, y se vuelve necesario usar técnicas globales como \emph{Multi-start} para explorar distintas zonas del dominio.
+Por este motivo, en regiones no convexas es más probable que los métodos queden atrapados en mínimos locales o se comporten de manera errática, y se vuelve necesario usar técnicas globales como Multi-start para explorar distintas zonas del dominio.
 
-
-
-
-\subsubsection*{Algoritmos recomendados}
-\begin{itemize}
-    \item \textbf{Métodos locales (Gradiente, Newton, Quasi-Newton):} funcionan bien en regiones convexas locales y para refinar soluciones, pero pueden quedarse atrapados en mínimos locales.
-    \item \textbf{Métodos de búsqueda global o estrategias híbridas:} como Multi-start, Recocido Simulado, Algoritmos Genéticos, permiten explorar distintas regiones del espacio y aumentan la probabilidad de encontrar el mínimo global.
-\end{itemize}
-
-\subsubsection*{Uso de Multi-start}
 La estrategia Multi-start consiste en ejecutar un algoritmo de busqueda de minimo local desde muchos puntos iniciales distintos. Cada ejecución puede converger a un mínimo local diferente, y al comparar los valores finales se elige la mejor solución como candidato al mínimo global. Este enfoque es especialmente útil para funciones no convexas como la presente, ya que ayuda a evitar quedar atrapado en mínimos locales subóptimos. La efectividad del método depende tanto de la distribución de los puntos iniciales como de la capacidad del algoritmo local para converger rápidamente hacia un mínimo en la región donde se inicia el proceso.
 
 
@@ -109,19 +99,15 @@ f(x,y) = x^4 - 4x^3 + 4x + y^2
 \]
 no es convexa globalmente, es importante elegir algoritmos adecuados y considerar estrategias de múltiples puntos iniciales para buscar un mínimo global.
 
-\subsubsection*{1. Método de Descenso por Gradiente}
-\textbf{Descripción:}  
-El método de Gradiente es un algoritmo local que actualiza iterativamente la variable en la dirección opuesta al gradiente:
-\[
-x_{k+1} = x_k - \alpha \nabla f(x_k)
-\]
+\subsubsection*{1. Método de Descenso por Gradiente (explicación detallada)}
 
-\textbf{Recomendaciones para este problema:}
-\begin{itemize}
-    \item Funciona bien en regiones donde la Hessiana es definida positiva (curvatura positiva), es decir, $x>2$ o $x<0$.
-    \item Puede quedar atrapado en mínimos locales si se inicia en la región $0 < x < 2$.
-    \item Es recomendable usar \textbf{Multi-start} para explorar distintas regiones.
-\end{itemize}
+\paragraph{Descripción corta.}
+El método de Gradiente es un método iterativo que actualiza la variable en la dirección de máximo descenso local:
+\[
+x_{k+1} = x_k - \alpha \nabla f(x_k),
+\]
+donde $\alpha>0$ es el \emph{learning rate} (tasa de paso) y $\nabla f(x_k)$ es el gradiente en $x_k$.
+
 
 \textbf{Pseudocódigo:}
 \begin{verbatim}
@@ -132,6 +118,117 @@ Para k = 0,1,2,...:
     Actualizar x_{k+1} = xk - alpha * gk
 Fin
 \end{verbatim}
+
+\paragraph{Funcionamiento paso a paso.}
+\begin{enumerate}
+  \item \textbf{Inicialización:}  
+  Se elige un punto inicial $x_0$, una tolerancia $\varepsilon$ y un número máximo de iteraciones $K_{\max}$.  
+  También se selecciona un valor inicial del learning rate $\alpha$, pero antes de fijarlo se realizan pruebas con varios valores para determinar cuál es el más adecuado en cada región del dominio.
+
+  \item \textbf{Cálculo del gradiente:}  
+  En cada iteración $k$ se calcula el gradiente $g_k=\nabla f(x_k)$.  
+  El gradiente señala la dirección de \emph{máximo incremento} de la función.  
+  Por tanto, su opuesto $-g_k$ indica la dirección de \emph{máximo descenso local}, que es la dirección óptima para reducir el valor de la función.
+
+  \item \textbf{Actualización:}  
+  El punto se desplaza en la dirección de descenso mediante  
+  \[
+  x_{k+1} = x_k - \alpha\, g_k.
+  \]
+  Este paso ajusta la posición según la magnitud del gradiente y el valor elegido de $\alpha$, controlando qué tan grande es el avance en la iteración.
+
+  \item \textbf{Criterio de parada:}  
+  Se detiene el algoritmo cuando se cumple alguna de las siguientes condiciones:
+  \begin{itemize}
+    \item \textbf{Cambio pequeño entre iteraciones:}  
+    \[
+    \|x_{k+1} - x_k\| < \varepsilon.
+    \]  
+    Esto indica que el algoritmo ha entrado en una zona donde la mejora por iteración es insignificante (estancamiento).  
+    Este criterio es útil incluso cuando el gradiente no disminuye estrictamente, pero las actualizaciones se vuelven muy pequeñas, señalando convergencia práctica.
+
+    \item \textbf{Tope de iteraciones $K_{\max}$:}  
+    Garantiza seguridad computacional, evitando ciclos infinitos en casos de divergencia o estancamiento.  
+    Además, permite comparar el costo computacional entre configuraciones distintas del algoritmo.
+  \end{itemize}
+
+  \item \textbf{Iterar:}  
+  El proceso se repite hasta cumplir alguno de los criterios de parada anteriores.
+\end{enumerate}
+
+\paragraph{Influencia de cada parámetro:}
+\begin{itemize}
+  \item \textbf{Learning rate $\alpha$:} controla el tamaño del paso en cada iteración.
+  \begin{itemize}
+    \item \textbf{$\alpha$ muy pequeño:} garantiza estabilidad y convergencia segura, pero requiere muchas iteraciones.
+    \item \textbf{$\alpha$ intermedio:} proporciona un equilibrio entre velocidad y estabilidad.
+    \item \textbf{$\alpha$ grande:} puede producir oscilaciones, saltarse el mínimo o incluso divergir, especialmente en regiones con alta curvatura.
+  \end{itemize}
+
+  \item \textbf{Tolerancia $\varepsilon$:} define el nivel de precisión. Valores más pequeños exigen mayores iteraciones.
+
+  \item \textbf{Máximo de iteraciones $K_{\max}$:} evita ciclos indefinidos y permite controlar el costo computacional.
+
+  \item \textbf{Punto inicial $x_0$:} en funciones no convexas determina a qué mínimo local converge el algoritmo; por ello se evaluan puntos iniciales en distintas regiones.
+\end{itemize}
+
+\subsubsection*{Protocolo experimental para seleccionar el mejor learning rate}
+Antes de ejecutar el algoritmo de descenso por gradiente de manera definitiva, se realizan pruebas en cada región del espacio utilizando múltiples puntos iniciales aleatorios.  
+Cada uno de estos puntos se evalúa con distintos valores de learning rate, con el objetivo de identificar qué $\alpha$ converge con mayor estabilidad, comparar velocidad (número de iteraciones), evitar valores que generen divergencias, determinar el valor más adecuado de $\alpha$ para cada región.
+
+
+Cada ejecución produce un registro que se almacena en el archivo \texttt{resultados\_gradiente.csv}, el cual contiene la siguiente información:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|p{8cm}|p{6cm}|}
+\hline
+\textbf{Columna} & \textbf{Descripción} & \textbf{Utilidad} \\
+\hline
+\texttt{x0} & Punto inicial $[x,y]$ desde donde comienza la búsqueda & Permite clasificar la región: $x>2$, $x<0$, $0<x<2$ \\
+\hline
+\texttt{lr} & Learning rate usado en la ejecución & Comparar cuál LR funciona mejor en cada región \\
+\hline
+\texttt{x\_final} & Punto obtenido al finalizar las iteraciones & Determinar el punto de convergencia \\
+\hline
+\texttt{f\_final} & Valor de $f(x)$ en el punto final & Medir cuán bueno es el resultado \\
+\hline
+\texttt{num\_iter} & Iteraciones necesarias para converger & Evaluar velocidad y estabilidad del algoritmo \\
+\hline
+\end{tabular}
+\caption{Contenido del archivo \texttt{resultados\_gradiente.csv}}
+\end{table}
+
+Este archivo se utiliza posteriormente para analizar de forma sistemática cuál learning rate es el más eficiente y estable en cada región del espacio.
+
+
+
+
+\paragraph{Objetivo.} Encontrar, por cada región del espacio (\(x>2\), \(x<0\), \(0<x<2\)), qué valores de $\alpha$ dan el mejor balance entre \emph{estabilidad} y \emph{rapidez} para el Descenso por Gradiente en la función estudiada.
+
+
+\paragraph{Procedimiento experimental recomendado (paso a paso).}
+\begin{enumerate}
+  \item \textbf{Definir regiones y puntos iniciales:} elegir varios puntos iniciales por región (ej.: 5 aleatorios por región) y además forzar algunos con $y=0$ si quieres observar el efecto en la componente $y$.
+  \item \textbf{Elegir candidatos de LR:} formar una lista de $\alpha$ candidatos \(\{0.001,0.005,0.01,0.05,0.1\}\).
+  \begin{itemize}
+    \item \textbf{Empieza pequeño:} la lista incluye 0.001 y 0.005 para cubrir estabilidad fuerte.
+    \item \textbf{Incluye valores típicos:} 0.01 suele funcionar bien en funciones suaves y sirve como referencia.
+    \item \textbf{Explora valores más grandes:} 0.05 y 0.1 para detectar si es posible acelerar; si provocan oscilación se descartan.
+    \item \textbf{Motivación teórica:} la presencia de términos de cuarto grado ($x^4$) implica que la curvatura puede crecer rápido con $x$, por eso no conviene empezar con LR demasiado grande.
+  \end{itemize}
+  \item \textbf{Para cada región y cada punto inicial:} ejecutar el descenso por gradiente para cada $\alpha$ y guardar las métricas.
+\end{enumerate}
+
+\paragraph{Reglas prácticas para seleccionar el LR inicial a probar.}
+
+\subsubsection*{Mejoras y alternativas (si quieres ir más allá)}
+\begin{itemize}
+  \item \textbf{Búsqueda en línea (line-search):} en vez de un LR fijo, usar una búsqueda de paso (Armijo/Wolfe) que garantiza reducción suficiente. Muy recomendado si buscas estabilidad.
+  \item \textbf{LR adaptativos:} métodos como Adagrad/Adam/RMSProp (más comunes en ML) adaptan pasos por componente y pueden ayudar cuando las escalas en $x$ y $y$ difieren.
+  \item \textbf{Escalado (preconditioning):} normalizar variables o usar una matriz de precondicionamiento para mitigar efectos de curvaturas muy distintas.
+\end{itemize}
+
 
 \subsubsection*{2. Método de Newton}
 \textbf{Descripción:}  
