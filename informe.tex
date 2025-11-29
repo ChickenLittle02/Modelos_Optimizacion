@@ -5,6 +5,9 @@
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
 \geometry{a4paper, margin=2.5cm}
 
 \title{Optimización de la función $f(x,y) = x^4 - 4x^3 + 4x + y^2$}
@@ -220,70 +223,119 @@ Este archivo se utiliza posteriormente para analizar de forma sistemática cuál
   \item \textbf{Para cada región y cada punto inicial:} ejecutar el descenso por gradiente para cada $\alpha$ y guardar las métricas.
 \end{enumerate}
 
-\paragraph{Reglas prácticas para seleccionar el LR inicial a probar.}
+\subsubsection*{Descenso por Gradiente con Búsqueda en Línea (Backtracking Armijo)}
 
-\subsubsection*{Mejoras y alternativas (si quieres ir más allá)}
-\begin{itemize}
-  \item \textbf{Búsqueda en línea (line-search):} en vez de un LR fijo, usar una búsqueda de paso (Armijo/Wolfe) que garantiza reducción suficiente. Muy recomendado si buscas estabilidad.
-  \item \textbf{LR adaptativos:} métodos como Adagrad/Adam/RMSProp (más comunes en ML) adaptan pasos por componente y pueden ayudar cuando las escalas en $x$ y $y$ difieren.
-  \item \textbf{Escalado (preconditioning):} normalizar variables o usar una matriz de precondicionamiento para mitigar efectos de curvaturas muy distintas.
-\end{itemize}
-
-
-\subsubsection*{2. Método de Newton}
-\textbf{Descripción:}  
-El método de Newton utiliza información de segunda derivada (Hessiano) para actualizar la variable:
-\[
-x_{k+1} = x_k - H_k^{-1} \nabla f(x_k)
-\]
-donde $H_k = \nabla^2 f(x_k)$.
-
-\textbf{Recomendaciones para este problema:}
-\begin{itemize}
-    \item Converge rápidamente en regiones donde la Hessiana es positiva definida.
-    \item Puede fallar o divergir en regiones donde la Hessiana tiene eigenvalores negativos ($0 < x < 2$).
-    \item Requiere calcular el Hessiano e invertirlo, por lo que es más costoso computacionalmente.
-\end{itemize}
-
-\textbf{Pseudocódigo:}
+\paragraph{Pseudocódigo.}
 \begin{verbatim}
-Elegir x0, tolerancia epsilon
-Para k = 0,1,2,...:
-    Calcular gradiente gk = grad(f)(xk)
-    Si ||gk|| < epsilon: terminar
-    Calcular Hessiano Hk = Hess(f)(xk)
-    Resolver Hk * pk = gk
-    Actualizar x_{k+1} = xk - pk
-Fin
+Gradient Descent con Backtracking Armijo
+
+Entradas:
+    x0        -> punto inicial
+    epsilon   -> tolerancia
+    Kmax      -> máximo número de iteraciones
+    alpha0    -> paso inicial (típicamente 1)
+    beta      -> factor de reducción (0 < beta < 1)
+    c         -> constante de Armijo (típicamente 1e-4)
+
+x = x0
+Guardar x en historial
+
+Para k = 0,1,...,Kmax:
+
+    1. Calcular gradiente g = grad_f(x)
+
+    2. Si norm(g) < epsilon:
+           terminar
+
+    3. Backtracking Armijo:
+            alpha = alpha0
+            fx = f(x)
+            g_norm_sq = dot(g, g)
+
+            Mientras f(x - alpha*g) > fx - c*alpha*g_norm_sq:
+                    alpha = beta * alpha
+
+    4. Actualizar:
+            x_new = x - alpha*g
+
+    5. Guardar x_new en historial
+
+    6. Si norm(x_new - x) < epsilon:
+           terminar
+
+    7. x = x_new
+
+Fin Para
+
+Salida:
+    x final y el historial de iteraciones
 \end{verbatim}
 
-\subsubsection*{3. Método Quasi-Newton (BFGS)}
-\textbf{Descripción:}  
-Quasi-Newton aproxima el Hessiano inverso iterativamente sin calcularlo explícitamente:
-\[
-x_{k+1} = x_k - W_k \nabla f(x_k)
-\]
-donde $W_k \approx H_k^{-1}$ se actualiza en cada iteración usando la fórmula BFGS.
 
-\textbf{Recomendaciones para este problema:}
+\paragraph{Explicación paso a paso del algoritmo.}
+
+\begin{enumerate}
+
+\item \textbf{Inicialización.}  
+Se parte de un punto inicial $x_0$. También se establece una tolerancia $\varepsilon$ y un máximo de iteraciones $K_{\max}$.  
+
+El historial guarda las posiciones del algoritmo para poder estudiar la trayectoria posterior.
+
+\item \textbf{Cálculo del gradiente.}  
+En cada iteración se evalúa:
+\[
+g_k = \nabla f(x_k).
+\]
+El gradiente indica la dirección de mayor incremento local de la función; por lo tanto, el descenso debe hacerse en la dirección opuesta.
+
+\item \textbf{Criterio de parada por gradiente pequeño.}  
+Si
+\[
+\|g_k\| < \varepsilon,
+\]
+entonces la función es prácticamente plana alrededor del punto actual, lo cual indica que se alcanzó un punto cercano a un mínimo.
+
+\item \textbf{Cálculo dinámico del paso $\alpha$ mediante Backtracking Armijo.}  
+En lugar de usar un valor fijo de \emph{learning rate}, se escoge un paso que garantice una disminución suficiente en la función.
+
 \begin{itemize}
-    \item Combina la velocidad de Newton con la simplicidad del Gradiente.
-    \item Funciona bien localmente en regiones de curvatura positiva y es más estable que Newton si se parte de un punto alejado.
-    \item También se recomienda usar Multi-start para aumentar la probabilidad de encontrar mínimos globales.
+    \item Se comienza con $\alpha_0 = 1$.
+    \item Se comprueba la condición de Armijo:
+    \[
+    f(x - \alpha g_k) \le f(x) - c\,\alpha\,\|g_k\|^2.
+    \]
+    \item Si la condición no se cumple, el paso se reduce multiplicando por $\beta$:
+    \[
+    \alpha \gets \beta\alpha, \qquad 0 < \beta < 1.
+    \]
+    \item Este proceso continúa hasta que el paso sea seguro y produzca una reducción adecuada.
 \end{itemize}
 
-\textbf{Pseudocódigo:}
-\begin{verbatim}
-Elegir x0, tolerancia epsilon
-Inicializar W0 = identidad
-Para k = 0,1,2,...:
-    Calcular gradiente gk = grad(f)(xk)
-    Si ||gk|| < epsilon: terminar
-    Calcular pk = Wk * gk
-    Actualizar x_{k+1} = xk - pk
-    Actualizar Wk+1 usando fórmula BFGS
-Fin
-\end{verbatim}
+La búsqueda en línea garantiza que:
+
+\begin{itemize}
+    \item nunca se toma un paso demasiado grande que cause divergencia,
+    \item tampoco se necesita un $\alpha$ excesivamente pequeño que ralentice el algoritmo.
+\end{itemize}
+
+\item \textbf{Actualización del punto.}  
+Una vez determinado el paso adecuado se realiza:
+\[
+x_{k+1} = x_k - \alpha g_k.
+\]
+La magnitud del desplazamiento se ajusta dinámicamente según la curvatura local detectada por Armijo.
+
+\item \textbf{Criterio de parada por cambio pequeño entre iteraciones.}  
+Si
+\[
+\|x_{k+1} - x_k\| < \varepsilon,
+\]
+entonces se concluye que el algoritmo está suficientemente estabilizado y no vale la pena continuar.
+
+\item \textbf{Iteración.}  
+Se repite el proceso utilizando $x_{k+1}$ como nuevo punto de partida.
+\end{enumerate}
+
 
 \section{Comparación de Resultados y Graficación}
 
