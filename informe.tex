@@ -271,6 +271,45 @@ Salida:
     x final y el historial de iteraciones
 \end{verbatim}
 
+\subsubsection*{Explicación Detallada de la Condición de Armijo}
+
+\paragraph{¿Qué es la condición de Armijo?}
+La \textbf{condición de Armijo} (también llamada \emph{regla de suficiente descenso}) es una desigualdad que verifica si el paso elegido produce una reducción ``adecuada'' en el valor de la función objetivo. Matemáticamente, para un punto $x_k$, dirección de descenso $d_k = -\nabla f(x_k)$ y paso $\alpha > 0$, la condición es:
+\[
+f(x_k + \alpha d_k) \leq f(x_k) + c \cdot \alpha \nabla f(x_k)^T d_k
+\]
+
+Para \textbf{descenso por gradiente} donde $d_k = -g_k$ (con $g_k = \nabla f(x_k)$), esta desigualdad se convierte en:
+\[
+f(x_k - \alpha g_k) \leq f(x_k) - c\alpha \|g_k\|^2
+\]
+donde:
+\begin{itemize}
+    \item $0 < c < 1$ (típicamente $c \approx 10^{-4}$)
+    \item $\alpha$ es el tamaño de paso que estamos probando
+    \item $\|g_k\|^2 = \nabla f(x_k)^T g_k$ (producto punto del gradiente consigo mismo)
+\end{itemize}
+
+\paragraph{¿Por qué al cumplirse la condición el paso es ``seguro''?}
+Cuando se cumple la condición de Armijo, garantizamos:
+
+\begin{enumerate}
+    \item \textbf{Descenso suficiente}\\
+    La reducción en $f$ es al menos una fracción $c$ de lo que predice la aproximación lineal:
+    \[
+    f(x_k) - f(x_{k+1}) \geq c\alpha \|g_k\|^2 > 0
+    \]
+    Como $\|g_k\|^2 > 0$ (si no estamos en un punto estacionario), la función \emph{decrece estrictamente}.
+
+    \item \textbf{Monotonicidad}\\
+    La secuencia $\{f(x_k)\}$ es estrictamente decreciente.
+
+    \item \textbf{Acotación del paso}\\
+    El $\alpha$ aceptado no es excesivamente grande, evitando oscilaciones.
+
+    \item \textbf{Convergencia global (bajo condiciones)}\\
+    Para funciones con gradiente Lipschitz continuo, el backtracking de Armijo garantiza que eventualmente se encontrará un $\alpha$ que satisfaga la condición, y el método convergerá a un punto estacionario.
+\end{enumerate}
 
 \paragraph{Explicación paso a paso del algoritmo.}
 
