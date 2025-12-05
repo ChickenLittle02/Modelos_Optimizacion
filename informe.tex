@@ -175,55 +175,9 @@ Fin
   \item \textbf{Punto inicial $x_0$:} en funciones no convexas determina a qué mínimo local converge el algoritmo; por ello se evaluan puntos iniciales en distintas regiones.
 \end{itemize}
 
-\subsubsection*{Protocolo experimental para seleccionar el mejor learning rate}
-Antes de ejecutar el algoritmo de descenso por gradiente de manera definitiva, se realizan pruebas en cada región del espacio utilizando múltiples puntos iniciales aleatorios.  
-Cada uno de estos puntos se evalúa con distintos valores de learning rate, con el objetivo de identificar qué $\alpha$ converge con mayor estabilidad, comparar velocidad (número de iteraciones), evitar valores que generen divergencias, determinar el valor más adecuado de $\alpha$ para cada región.
+\newpage
 
-
-Cada ejecución produce un registro que se almacena en el archivo \texttt{resultados\_gradiente.csv}, el cual contiene la siguiente información:
-
-\begin{table}[h!]
-\centering
-\begin{tabular}{|c|p{8cm}|p{6cm}|}
-\hline
-\textbf{Columna} & \textbf{Descripción} & \textbf{Utilidad} \\
-\hline
-\texttt{x0} & Punto inicial $[x,y]$ desde donde comienza la búsqueda & Permite clasificar la región: $x>2$, $x<0$, $0<x<2$ \\
-\hline
-\texttt{lr} & Learning rate usado en la ejecución & Comparar cuál LR funciona mejor en cada región \\
-\hline
-\texttt{x\_final} & Punto obtenido al finalizar las iteraciones & Determinar el punto de convergencia \\
-\hline
-\texttt{f\_final} & Valor de $f(x)$ en el punto final & Medir cuán bueno es el resultado \\
-\hline
-\texttt{num\_iter} & Iteraciones necesarias para converger & Evaluar velocidad y estabilidad del algoritmo \\
-\hline
-\end{tabular}
-\caption{Contenido del archivo \texttt{resultados\_gradiente.csv}}
-\end{table}
-
-Este archivo se utiliza posteriormente para analizar de forma sistemática cuál learning rate es el más eficiente y estable en cada región del espacio.
-
-
-
-
-\paragraph{Objetivo.} Encontrar, por cada región del espacio (\(x>2\), \(x<0\), \(0<x<2\)), qué valores de $\alpha$ dan el mejor balance entre \emph{estabilidad} y \emph{rapidez} para el Descenso por Gradiente en la función estudiada.
-
-
-\paragraph{Procedimiento experimental recomendado (paso a paso).}
-\begin{enumerate}
-  \item \textbf{Definir regiones y puntos iniciales:} elegir varios puntos iniciales por región (ej.: 5 aleatorios por región) y además forzar algunos con $y=0$ si quieres observar el efecto en la componente $y$.
-  \item \textbf{Elegir candidatos de LR:} formar una lista de $\alpha$ candidatos \(\{0.001,0.005,0.01,0.05,0.1\}\).
-  \begin{itemize}
-    \item \textbf{Empieza pequeño:} la lista incluye 0.001 y 0.005 para cubrir estabilidad fuerte.
-    \item \textbf{Incluye valores típicos:} 0.01 suele funcionar bien en funciones suaves y sirve como referencia.
-    \item \textbf{Explora valores más grandes:} 0.05 y 0.1 para detectar si es posible acelerar; si provocan oscilación se descartan.
-    \item \textbf{Motivación teórica:} la presencia de términos de cuarto grado ($x^4$) implica que la curvatura puede crecer rápido con $x$, por eso no conviene empezar con LR demasiado grande.
-  \end{itemize}
-  \item \textbf{Para cada región y cada punto inicial:} ejecutar el descenso por gradiente para cada $\alpha$ y guardar las métricas.
-\end{enumerate}
-
-\subsubsection*{Descenso por Gradiente con Búsqueda en Línea (Backtracking Armijo)}
+\subsubsection*{2. Descenso por Gradiente con Búsqueda en Línea (Backtracking Armijo)}
 
 \paragraph{Pseudocódigo.}
 \begin{verbatim}
@@ -273,13 +227,13 @@ Salida:
 
 \subsubsection*{Explicación Detallada de la Condición de Armijo}
 
-\paragraph{¿Qué es la condición de Armijo?}
-La \textbf{condición de Armijo} (también llamada \emph{regla de suficiente descenso}) es una desigualdad que verifica si el paso elegido produce una reducción ``adecuada'' en el valor de la función objetivo. Matemáticamente, para un punto $x_k$, dirección de descenso $d_k = -\nabla f(x_k)$ y paso $\alpha > 0$, la condición es:
+
+La condición de Armijo (también llamada \emph{regla de suficiente descenso}) es una desigualdad que verifica si el paso elegido produce una reducción ``adecuada'' en el valor de la función objetivo. Matemáticamente, para un punto $x_k$, dirección de descenso $d_k = -\nabla f(x_k)$ y paso $\alpha > 0$, la condición es:
 \[
 f(x_k + \alpha d_k) \leq f(x_k) + c \cdot \alpha \nabla f(x_k)^T d_k
 \]
 
-Para \textbf{descenso por gradiente} donde $d_k = -g_k$ (con $g_k = \nabla f(x_k)$), esta desigualdad se convierte en:
+Para descenso por gradiente donde $d_k = -g_k$ (con $g_k = \nabla f(x_k)$), esta desigualdad se convierte en:
 \[
 f(x_k - \alpha g_k) \leq f(x_k) - c\alpha \|g_k\|^2
 \]
@@ -290,7 +244,6 @@ donde:
     \item $\|g_k\|^2 = \nabla f(x_k)^T g_k$ (producto punto del gradiente consigo mismo)
 \end{itemize}
 
-\paragraph{¿Por qué al cumplirse la condición el paso es ``seguro''?}
 Cuando se cumple la condición de Armijo, garantizamos:
 
 \begin{enumerate}
@@ -376,70 +329,220 @@ Se repite el proceso utilizando $x_{k+1}$ como nuevo punto de partida.
 \end{enumerate}
 
 
-\section{Comparación de Resultados y Graficación}
 
-\subsection{Experimentos}
-Se realizaron experimentos utilizando los tres algoritmos: Descenso por Gradiente, Newton y Quasi-Newton (BFGS) sobre la función
+
+\section{Descripción del Proceso Experimental}
+
+Para analizar el comportamiento del algoritmo de Descenso por Gradiente (Gradient Descent, GD)
+sobre la función objetivo, se diseñó un experimento sistemático basado en la variación de puntos 
+iniciales y tasas de aprendizaje (\textit{learning rates}). El procedimiento seguido fue el siguiente:
+
+\begin{enumerate}
+    \item \textbf{Generación de puntos iniciales.}  
+    Se definieron múltiples puntos iniciales distribuidos en tres regiones del plano, con el fin de estudiar cómo la posición inicial influye en la convergencia, la estabilidad y el valor final alcanzado por el algoritmo.
+
+    \item \textbf{Ejecución del GD para distintos learning rates.}  
+    Para cada punto inicial se ejecutó el algoritmo de GD utilizando un conjunto de tasas de aprendizaje predefinidas:  
+    \[
+        lr \in \{0.001,\ 0.005,\ 0.01,\ 0.05,\ 0.1,\ 0.2,\ 0.3,\ 0.5\}.
+    \]
+    En cada ejecución, el método avanzó mediante la regla
+    \[
+        x_{k+1} = x_k - lr \,\nabla f(x_k),
+    \]
+    manteniendo un límite máximo de iteraciones y criterios de paro basados en la norma del gradiente y el desplazamiento entre iteraciones.
+
+    \item \textbf{Registro de estadísticas por ejecución.}  
+    Cada corrida del algoritmo almacenó información relevante, incluyendo:
+    \begin{itemize}
+        \item valor inicial y final de la función $f(x)$,
+        \item número total de iteraciones realizadas,
+        \item norma del gradiente a lo largo del proceso,
+        \item causas de terminación (convergencia, máximo de iteraciones o divergencia por \textit{overflow}).
+    \end{itemize}
+    Los resultados se clasificaron en tres categorías: \textit{convergencia}, \textit{no convergencia} y \textit{divergencia}.
+
+    \item \textbf{Construcción de tablas y consolidación de resultados.}  
+    Los datos obtenidos se organizaron en tablas que resumen, para cada combinación de región y learning rate:
+    \begin{itemize}
+        \item el número de ejecuciones que convergieron,
+        \item las que no convergieron por alcanzar el máximo de iteraciones,
+        \item las que divergieron por errores numéricos.
+    \end{itemize}
+
+    \item \textbf{Análisis estadístico y comparación.}  
+    A partir de las estadísticas agregadas se evaluó:
+    \begin{itemize}
+        \item la estabilidad del método según el learning rate,
+        \item la velocidad de convergencia medida en iteraciones promedio,
+        \item la calidad del punto final alcanzado (mínimo local o global),
+        \item el comportamiento particular de cada región.
+    \end{itemize}
+    Estos análisis permitieron identificar intervalos óptimos de aprendizaje y zonas de inestabilidad.
+
+\end{enumerate}
+
+En conjunto, este proceso permitió caracterizar de manera completa cómo afecta la tasa de aprendizaje, la posición inicial y la geometría de la función al desempeño del Descenso por Gradiente, proporcionando una base estadística sólida para la selección de parámetros adecuados.
+
+\section{Conclusiones del analisis del algoritmo de Gradiente Descendiente}
+
+\subsection*{1. Los learning rates pequeños convergen pero requieren muchas iteraciones}
+Los casos con learning rate = 0.001 y algunos con 0.005 muestran convergencias extremadamente lentas: 
+con iteraciones promedio entre 1000 y 2400. En gran parte de las regiones, al utilizar estos
+learning rates la razón de no convergencia es que precisaban mas de 2400 iteraciones para
+poder alcanzar un resultado válido.
+
+Esto indica que el GD con tasas de aprendizaje demasiado pequeñas no avanza lo suficiente en cada paso y puede estancarse antes de llegar al mínimo.
+
+\subsection*{2. Existe una zona óptima de aprendizaje: 0.05 -- 0.1}
+Al analizar las estadísticas de convergencia para lr = 0.05, el método converge de forma estable con aproximadamente
+120--130 iteraciones, y para lr = 0.1, la convergencia es incluso más rápida: entre 60 y 70 iteraciones en promedio.
+Alcanzando con ambos casos resultados finales cercanos al mínimo global (aprox. $f(x) = -15.23$).
+
+\subsection*{3. A partir de lr $\geq 0.2$ el método diverge sistemáticamente}
+Los datos muestran que el 100\% de los casos con lr = 0.2, 0.3 y 0.5 presentan divergencia por overflow.
+Se registraron 1401 divergencias de 2400 experimentos realizados, equivalente al 58.375\% del total de ejecuciones,
+siendo la causa es siempre overflow numérico, no oscilación o crecimiento lento.
+Además, el lr mas frecuente en divergencias fue 0.2.
+
+
+\subsection*{4. Influencia de la región}
+Las estadísticas permiten observar que la Región 1 es la que presenta más divergencias
+y la Región 3 es la que mejor alcanza valores cercanos al mínimo global (f\_final alrededor de $-15.23$).
+
+\subsection{5. La convergencia lleva consistentemente al mismo mínimo}
+En todos los casos donde el algoritmo converge:
+
 \[
-f(x,y) = x^4 - 4x^3 + 4x + y^2
+f_{\text{final}} \in [-15.2344,\, -1.4456]
 \]
-partiendo de múltiples puntos iniciales (\textbf{Multi-start}) para explorar diferentes regiones de la función y evaluar la convergencia local y global.
 
-\subsection{Criterios de Comparación}
-Los resultados se comparan considerando:
 \begin{itemize}
-    \item Número de iteraciones hasta convergencia.
-    \item Tiempo de cómputo (si se dispone).
-    \item Valor final de la función $f(x,y)$.
-    \item Sensibilidad al punto inicial.
-    \item Trayectorias de iteración en el plano $(x,y)$.
+    \item Los valores cercanos a $-1.4456$ corresponden a un mínimo local.
+    \item Los valores alrededor de $-15.23$ corresponden al mínimo global.
 \end{itemize}
 
-\subsection{Observaciones}
+\section{Conclusión Final}
+
+Los datos muestran de manera consistente que:
+
+\[
+\boxed{\text{El intervalo óptimo para un comportamiento estable y eficiente es } lr \in [0.05,\, 0.1].}
+\]
+
+Fuera de esta región, el algoritmo se vuelve ineficiente (si lr es muy pequeño) o completamente inestable (si lr es grande).  
+El análisis también evidencia que las regiones muestran comportamientos distintos, siendo la Región 3 la más estable y cercana al mínimo global.
+
+\section{Procesamiento de Datos con el Método de Armijo}
+
+En esta sección se describe el procedimiento utilizado para ejecutar el algoritmo de Descenso por Gradiente con búsqueda en línea mediante la condición de Armijo, así como el procesamiento y registro estadístico de los resultados obtenidos. 
+El objetivo fue evaluar el desempeño del método bajo diferentes configuraciones de parámetros y obtener métricas cuantitativas que permitan comparar su estabilidad y eficiencia.
+
+\subsection{Generación y carga de los puntos iniciales}
+El análisis se realizó utilizando el mismo conjunto de 300 puntos iniciales previamente generados para utilizar con el algoritmo de Grdiente Decsendiente 
+
+\subsection{Ejecución del algoritmo de Armijo}
+Para cada punto inicial se aplicó el método de Descenso por Gradiente, empleando una búsqueda en línea basada en la condición de Armijo.  
+Dada una posición \(x_k\) y su gradiente \(\nabla f(x_k)\), el procedimiento determina un paso \(\alpha\) tal que:
+
+\[
+f(x_k - \alpha \nabla f(x_k)) \leq f(x_k) - c \, \alpha \, \|\nabla f(x_k)\|^2.
+\]
+
+El valor inicial del paso \(\alpha_0\) se reduce sucesivamente mediante el factor \(\beta\) hasta satisfacer la desigualdad anterior.  
+Se exploraron diversas combinaciones de parámetros:
+
+\[
+\alpha_0 \in \{0.5,\, 0.8,\, 1.0\}, \qquad
+\beta \in \{0.5,\, 0.7\}, \qquad
+c \in \{10^{-4},\, 10^{-3}\}.
+\]
+
+Esto generó múltiples ejecuciones independientes del algoritmo, una por cada punto inicial y cada combinación de parámetros.
+
+\subsection{Criterios de parada}
+El algoritmo se detuvo siguiendo dos condiciones clásicas:
+
 \begin{itemize}
-    \item \textbf{Descenso por Gradiente:} converge más lentamente, especialmente si el punto inicial está cerca de regiones de curvatura plana o mínima local no global.
-    \item \textbf{Método de Newton:} converge muy rápido cerca de mínimos locales con Hessiana positiva definida, pero puede fallar si el Hessiano es indefinido.
-    \item \textbf{Quasi-Newton (BFGS):} balancea velocidad y estabilidad, evitando el cálculo directo del Hessiano, con convergencia superlineal en regiones locales.
-    \item \textbf{Multi-start:} aumenta significativamente la probabilidad de encontrar el mínimo global, explorando varias regiones de la función no convexa.
+    \item \textbf{Norma del gradiente pequeña:} \(\|\nabla f(x_k)\| < \text{tol}\), indicando proximidad a un punto crítico.
+    \item \textbf{Cambio pequeño entre iteraciones:} \(\|x_{k+1} - x_k\| < \text{tol}\).
 \end{itemize}
 
-\subsection{Graficación de la Función y Trayectorias}
-Para visualizar la convergencia de los algoritmos se pueden utilizar gráficos de contorno de la función y superponer la trayectoria de iteraciones de cada algoritmo:
+Se estableció un máximo de iteraciones (200 iteraciones por ejecución) para evitar bucles prolongados, aunque en la práctica ninguna ejecución alcanzó este límite debido a la eficacia del método.
 
-\textbf{Pseudocódigo para graficar trayectorias:}
-\begin{verbatim}
-Crear una malla de puntos (X,Y) para evaluar f(X,Y)
-Calcular Z = f(X,Y)
-Dibujar contornos de Z
-Para cada algoritmo:
-    Obtener historial de puntos iterativos [x_k, y_k]
-    Trazar línea conectando los puntos del historial
-Añadir leyenda y etiquetas
-\end{verbatim}
+\subsection{Registro de resultados}
+Para cada ejecución se almacenaron las siguientes métricas:
 
-\subsection{Resultados Esperados}
 \begin{itemize}
-    \item Las trayectorias muestran cómo cada algoritmo se aproxima a diferentes mínimos locales.
-    \item Multi-start permite que al menos uno de los algoritmos alcance el mínimo global.
-    \item Descenso por Gradiente puede requerir más iteraciones que Newton o BFGS.
+    \item número total de iteraciones realizadas,
+    \item valor final de la función objetivo,
+    \item coordenadas finales alcanzadas,
+    \item distancia euclidiana del punto final al origen,
+    \item indicador de convergencia o no convergencia,
+    \item parámetros \(\alpha_0\), \(\beta\) y \(c\) utilizados en la ejecución.
 \end{itemize}
 
-\subsection{Figura Ejemplo}
-% Nota: incluir imagen real generada con Python/Matplotlib
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.7\textwidth]{trayectorias.png}
-\caption{Contorno de $f(x,y)$ con trayectorias de los algoritmos desde múltiples puntos iniciales.}
-\label{fig:trayectorias}
-\end{figure}
+Todos estos datos fueron consolidados en un único archivo CSV para facilitar su posterior análisis estadístico.
 
+\subsection{Procesamiento estadístico}
+A partir del archivo consolidado se calcularon estadísticas globales para cada combinación de parámetros, incluyendo:
 
-
-\section{Conclusiones}
 \begin{itemize}
-    \item El método de Newton converge más rápido localmente, pero requiere cálculo del Hessiano.
-    \item El descenso por gradiente es más simple, pero puede necesitar más pasos.
-    \item Quasi-Newton (BFGS) combina velocidad y menor cálculo de derivadas.
+    \item valor promedio, mínimo y máximo del número de iteraciones;
+    \item valor promedio, mínimo y máximo de la función objetivo final;
+    \item distancia promedio a la solución final;
+    \item tasa de convergencia expresada en porcentaje;
+    \item número total de ejecuciones exitosas y fallidas.
 \end{itemize}
+
+Estas estadísticas permiten identificar las configuraciones más eficientes y analizar cómo influyen los parámetros de Armijo en la estabilidad, rapidez y calidad de convergencia del algoritmo.
+
+
+\section{Análisis Estadístico de los Resultados del Método de Armijo}
+
+\subsection{Robustez del Método}
+En todas las configuraciones evaluadas, el método de Armijo logró convergencia en el \emph{100\%} de las ejecuciones. Esto implica que, para este problema en particular, la búsqueda en línea garantiza estabilidad incluso cuando se modifican ampliamente los parámetros de control. A diferencia del descenso por gradiente con tasa de aprendizaje fija, no se registraron casos de divergencia numérica ni estancamiento prematuro.
+
+\subsection{Influencia de los Parámetros sobre el Número de Iteraciones}
+El número promedio de iteraciones presenta variaciones significativas según los valores de \(\alpha_0\) y \(\beta\). Los resultados indican que:
+
+\begin{itemize}
+    \item El desempeño más eficiente se obtuvo con \(\alpha_0 = 0.8\) y \(\beta = 0.5\), alcanzando un promedio de aproximadamente 83 iteraciones.
+    \item El peor desempeño se observó con \(\alpha_0 = 0.8\) y \(\beta = 0.7\), con promedios entre 108 y 111 iteraciones.
+    \item El parámetro \(c\) no produjo variaciones relevantes en el comportamiento del algoritmo, dado que las diferencias entre \(c = 10^{-4}\) y \(c = 10^{-3}\) fueron menores al 1\%.
+\end{itemize}
+
+Estos resultados confirman que la elección de \(\beta\) afecta directamente la agresividad con la que el paso \(\alpha\) se reduce durante la búsqueda en línea. Valores de \(\beta\) más grandes conducen a una reducción más lenta del paso, generando iteraciones adicionales antes de satisfacer la condición de Armijo.
+
+\subsection{Análisis del Valor Final de la Función}
+Los valores finales de la función objetivo se encontraron en el rango comprendido entre aproximadamente \(-15.23\) y \(-1.45\). Todos los experimentos fueron capaces de alcanzar mínimos locales o el mínimo global, dependiendo del punto inicial. Las configuraciones con \(\alpha_0 = 0.8\) lograron de forma más consistente valores finales más cercanos al mínimo global.
+
+\subsection{Distancia Final al Punto Óptimo}
+El análisis de la distancia entre el punto final y el origen muestra una tendencia coherente con el comportamiento de la función objetivo:
+
+\begin{itemize}
+    \item Las configuraciones con \(\alpha_0 = 0.8\) alcanzaron las menores distancias promedio, confirmando un mejor acercamiento al mínimo global.
+    \item Los valores con \(\beta = 0.7\) produjeron distancias ligeramente mayores que aquellos con \(\beta = 0.5\), indicando que una reducción más gradual de \(\alpha\) puede llevar a zonas menos favorables del paisaje de la función.
+\end{itemize}
+
+\subsection{Conclusión General}
+El análisis estadístico demuestra que el método de Armijo es altamente estable y eficiente para este problema. Todos los experimentos convergieron, sin presentar divergencias numéricas, oscilaciones ni estancamiento en el máximo de iteraciones. La configuración más eficiente fue \(\alpha_0 = 0.8\) y \(\beta = 0.5\), logrando el menor número promedio de iteraciones y valores finales próximos al mínimo global. Por otro lado, el parámetro \(c\) tuvo un impacto marginal en el rendimiento, lo cual coincide con la teoría clásica de métodos de búsqueda en línea.
+
+Estos resultados indican que, cuando se requiere robustez y estabilidad ante cambios en el punto inicial o en la estructura local de la función, la regla de Armijo constituye una alternativa ampliamente superior al uso de un valor fijo de tasa de aprendizaje.
+
+\section{Conclusión General}
+
+El análisis comparativo entre el descenso por gradiente con tasa de aprendizaje fija y el método con búsqueda en línea mediante la regla de Armijo permite establecer diferencias claras en estabilidad, robustez y eficiencia, utilizando exclusivamente los datos obtenidos durante las ejecuciones experimentales.
+
+En primer lugar, el algoritmo con \textbf{tasa de aprendizaje fija} mostró un comportamiento altamente sensible al valor del parámetro. Para valores pequeños de $lr$ el proceso converge, pero lo hace de manera lenta y con un número elevado de iteraciones. A medida que el $lr$ se incrementa, el método comienza a presentar oscilaciones, y a partir de $lr \geq 0.2$ los experimentos mostraron divergencia sistemática debido a incrementos descontrolados en la norma del gradiente y errores numéricos por desbordamiento. Estos resultados confirman la limitada región de estabilidad del método cuando el paso no se ajusta dinámicamente.
+
+En contraste, el método de \textbf{búsqueda en línea con Armijo} logró convergencia en todos los casos donde el gradiente no era numéricamente degenerado. Gracias al ajuste adaptativo del paso, el algoritmo evitó las oscilaciones y la divergencia incluso cuando el valor inicial de $\alpha$ era grande. Los datos muestran que Armijo fue capaz de reducir el paso de manera automática cuando la función no satisfacía la condición de descenso suficiente, garantizando estabilidad global y trayectorias de descenso más controladas.
+
+Comparando ambos métodos en conjunto, se observa que Armijo ofrece una \textbf{mayor robustez} al no depender críticamente de la elección manual de un $lr$ adecuado. Además, dado que ajusta dinámicamente el tamaño de paso, la trayectoria hacia el mínimo es más eficiente que en el caso de tasas fijas pequeñas, sin incurrir en los riesgos de explosión numérica que aparecen con tasas fijas grandes. En términos de confiabilidad y consistencia, el descenso con Armijo resulta claramente superior.
+
+En conclusión, los resultados obtenidos indican que, para problemas donde la forma de la función objetivo o la escala del gradiente no se conocen a priori, el método con búsqueda en línea tipo Armijo representa una alternativa más estable, segura y eficiente que el descenso con tasa de aprendizaje fija, ofreciendo convergencia confiable sin necesidad de calibración manual del parámetro de paso.
+
+
+
 
 \end{document}
