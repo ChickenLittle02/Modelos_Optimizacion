@@ -93,6 +93,54 @@ Por este motivo, en regiones no convexas es más probable que los métodos quede
 
 La estrategia Multi-start consiste en ejecutar un algoritmo de busqueda de minimo local desde muchos puntos iniciales distintos. Cada ejecución puede converger a un mínimo local diferente, y al comparar los valores finales se elige la mejor solución como candidato al mínimo global. Este enfoque es especialmente útil para funciones no convexas como la presente, ya que ayuda a evitar quedar atrapado en mínimos locales subóptimos. La efectividad del método depende tanto de la distribución de los puntos iniciales como de la capacidad del algoritmo local para converger rápidamente hacia un mínimo en la región donde se inicia el proceso.
 
+\subsection{Análisis visual de la superficie y curvas de nivel}
+A partir del análisis previo, se observa que la región definida por $x \in [-5,5]$ y $y \in [-5,5]$ engloba las zonas críticas más relevantes de la función, ya que incluye tanto regiones convexas como no convexas. Este intervalo de valores de 
+$x$ permite capturar de manera adecuada el comportamiento crítico de la función, incluyendo los puntos donde la Hessiana cambia de signo. En consecuencia, dicho dominio resulta representativo para estudiar tanto la existencia de mínimos locales como el desempeño esperado de los métodos de optimización, razón por la cual se decidió analizarlo con mayor profundidad.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{superficie.png}
+\caption{Superficie tridimensional de $f(x,y)$.}
+\label{fig:superficie}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{curvas_nivel.png}
+\caption{Curvas de nivel de $f(x,y)$.}
+\label{fig:curvas}
+\end{figure}
+
+\subsubsection*{Interpretación de la superficie:}
+Segun la Figura 1 la superficie tridimensional de la función revela claramente tres regiones con comportamientos geométricos diferenciados:
+
+\begin{itemize}
+    \item Para $x > 2$:  
+    En esta zona la función es convexa, lo que se manifiesta como una forma de ``tazón'' bien definido. La curvatura es positiva en todas las direcciones y existe un mínimo local estable hacia el cual convergen los métodos de optimización.
+
+    \item Para $0 < x < 2$:  
+    En esta región la superficie se curva hacia arriba en la dirección $y$ (debido al término $y^2$), pero hacia abajo en la dirección $x$. Esto indica la coexistencia de curvaturas de signo opuesto, característica típica de un punto de silla. Este comportamiento coincide con el análisis de la Hessiana, ya que en esta región se cumple $12x^2 - 24x < 0$.
+
+    \item Para $x < 0$:  
+    En esta zona la función vuelve a ser convexa. Aunque el mínimo local es menos pronunciado que en la región $x > 2$, la curvatura sigue siendo positiva y el comportamiento es estable.
+\end{itemize}
+
+Lo cual confirma que la función no es convexa globalmente, pero sí presenta regiones convexas bien definidas separadas por una zona no convexa.
+
+\subsubsection*{Interpretación de las curvas de nivel:}
+
+Las curvas de nivel proporcionan una visión complementaria del comportamiento de la función, ya que representan los conjuntos de puntos donde $f(x,y)$ toma un valor constante.
+
+\begin{itemize}
+    \item Para $x < 0$ y $x > 2$:  
+    Las curvas de nivel son aproximadamente elípticas y concéntricas. Esto indica que, al desplazarse desde cualquier punto cercano, el gradiente apunta hacia un punto crítico estable. Geométricamente, este patrón es característico de mínimos locales con curvatura positiva en todas las direcciones.
+
+    \item Para $0 < x < 2$:  
+    Las curvas de nivel presentan una forma hiperbólica, típica de regiones tipo silla. En estas zonas no existe una dirección de descenso dominante, lo que genera trayectorias inestables para los algoritmos de optimización.
+
+    \item Además se identifican tres puntos donde las curvas se cierran o presentan un cambio significativo en su geometría, ubicados aproximadamente en $(-0.8,0)$, $(0.65,0)$ y $(2.9,0)$. Estos puntos corresponden a las soluciones del sistema $\nabla f(x,y)=0$. Los puntos $(-0.8,0)$ y $(2.9,0)$ se asocian a mínimos locales, evidenciados por curvas cerradas y concéntricas, mientras que el punto $(0.65,0)$ corresponde a un punto de silla, caracterizado por curvas de nivel de tipo hiperbólico.
+
+\end{itemize}
 
 \subsection{Algoritmos de Optimización}
 
