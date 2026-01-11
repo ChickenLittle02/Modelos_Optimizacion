@@ -435,34 +435,37 @@ En conjunto, este proceso permitió caracterizar de manera completa cómo afecta
 \section{Conclusiones del analisis del algoritmo de Gradiente Descendiente}
 
 \subsection*{1. Los learning rates pequeños convergen pero requieren muchas iteraciones}
-Los casos con learning rate = 0.001 y algunos con 0.005 muestran convergencias extremadamente lentas: 
-con iteraciones promedio entre 1000 y 2400. En gran parte de las regiones, al utilizar estos
-learning rates la razón de no convergencia es que precisaban mas de 2400 iteraciones para
-poder alcanzar un resultado válido.
+Los casos con learning rate = 0.001 y 0.005 muestran convergencias extremadamente lentas: 
+con iteraciones promedio cercanas o superiores a las 2000 iteraciones. En la mayoría de las regiones,
+al utilizar estos learning rates la razón principal de no convergencia es que el algoritmo alcanza
+el máximo de 2400 iteraciones sin cumplir los criterios de paro.
+
 
 Esto indica que el GD con tasas de aprendizaje demasiado pequeñas no avanza lo suficiente en cada paso y puede estancarse antes de llegar al mínimo.
 
 \subsection*{2. Existe una zona óptima de aprendizaje: 0.05 -- 0.1}
-Al analizar las estadísticas de convergencia para lr = 0.05, el método converge de forma estable con aproximadamente
-120--130 iteraciones, y para lr = 0.1, la convergencia es incluso más rápida: entre 60 y 70 iteraciones en promedio.
-Alcanzando con ambos casos resultados finales cercanos al mínimo global (aprox. $f(x) = -15.23$).
+Al analizar las estadísticas de convergencia para lr = 0.05, el método presenta el comportamiento más estable,
+con un número promedio de iteraciones cercano a 1600 y resultados finales consistentes.
+Para lr = 0.1, el método muestra una pérdida de estabilidad, con promedios superiores a 2000 iteraciones
+y numerosos casos que alcanzan el máximo de iteraciones sin converger.
+
 
 \subsection*{3. A partir de lr $\geq 0.2$ el método diverge sistemáticamente}
-Los datos muestran que el 100\% de los casos con lr = 0.2, 0.3 y 0.5 presentan divergencia por overflow.
-Se registraron 1401 divergencias de 2400 experimentos realizados, equivalente al 58.375\% del total de ejecuciones,
-siendo la causa es siempre overflow numérico, no oscilación o crecimiento lento.
-Además, el lr mas frecuente en divergencias fue 0.2.
+Los datos muestran que el 100\% de los casos con lr = 0.2, 0.3 y 0.5 presentan no convergencia,
+mayoritariamente asociada a divergencia por overflow numérico.
+Se registraron 2031 ejecuciones no convergentes de un total de 2400 experimentos, equivalente al 84.6\% del total.
+Dentro de estas, 900 ejecuciones corresponden exclusivamente a learning rates mayores o iguales a 0.2.
 
 
 \subsection*{4. Influencia de la región}
 Las estadísticas permiten observar que la Región 1 es la que presenta más divergencias
 y la Región 3 es la que mejor alcanza valores cercanos al mínimo global (f\_final alrededor de $-15.23$).
 
-\subsection{5. La convergencia lleva consistentemente al mismo mínimo}
+\subsection*{5. La convergencia lleva consistentemente al mismo mínimo}
 En todos los casos donde el algoritmo converge:
 
 \[
-f_{\text{final}} \in [-15.2344,\, -1.4456]
+f_{\text{final}} \in [-15.2344,\, -1.4457]
 \]
 
 \begin{itemize}
@@ -470,9 +473,8 @@ f_{\text{final}} \in [-15.2344,\, -1.4456]
     \item Los valores alrededor de $-15.23$ corresponden al mínimo global.
 \end{itemize}
 
-\section{Conclusión Final}
-
-Los datos muestran de manera consistente que:
+Con todo lo anterior concluimos que para la ejecucion del algoritmo de gradiente Descendiente
+con este problema los datos muestran de manera consistente que:
 
 \[
 \boxed{\text{El intervalo óptimo para un comportamiento estable y eficiente es } lr \in [0.05,\, 0.1].}
@@ -549,13 +551,13 @@ Estas estadísticas permiten identificar las configuraciones más eficientes y a
 \section{Análisis Estadístico de los Resultados del Método de Armijo}
 
 \subsection{Robustez del Método}
-En todas las configuraciones evaluadas, el método de Armijo logró convergencia en el \emph{100\%} de las ejecuciones. Esto implica que, para este problema en particular, la búsqueda en línea garantiza estabilidad incluso cuando se modifican ampliamente los parámetros de control. A diferencia del descenso por gradiente con tasa de aprendizaje fija, no se registraron casos de divergencia numérica ni estancamiento prematuro.
+En todas las configuraciones evaluadas, el método de Armijo logró convergencia en el \emph{100\%} de las ejecuciones registradas. Esto implica que, para este problema en particular, la búsqueda en línea garantiza estabilidad incluso cuando se modifican ampliamente los parámetros de control. A diferencia del descenso por gradiente con tasa de aprendizaje fija, no se registraron casos de divergencia numérica ni estancamiento prematuro.
 
 \subsection{Influencia de los Parámetros sobre el Número de Iteraciones}
 El número promedio de iteraciones presenta variaciones significativas según los valores de \(\alpha_0\) y \(\beta\). Los resultados indican que:
 
 \begin{itemize}
-    \item El desempeño más eficiente se obtuvo con \(\alpha_0 = 0.8\) y \(\beta = 0.5\), alcanzando un promedio de aproximadamente 83 iteraciones.
+    \item El desempeño más eficiente se obtuvo con \(\alpha_0 = 0.8\) y \(\beta = 0.5\), alcanzando un promedio de aproximadamente 90 iteraciones.
     \item El peor desempeño se observó con \(\alpha_0 = 0.8\) y \(\beta = 0.7\), con promedios entre 108 y 111 iteraciones.
     \item El parámetro \(c\) no produjo variaciones relevantes en el comportamiento del algoritmo, dado que las diferencias entre \(c = 10^{-4}\) y \(c = 10^{-3}\) fueron menores al 1\%.
 \end{itemize}
@@ -573,24 +575,165 @@ El análisis de la distancia entre el punto final y el origen muestra una tenden
     \item Los valores con \(\beta = 0.7\) produjeron distancias ligeramente mayores que aquellos con \(\beta = 0.5\), indicando que una reducción más gradual de \(\alpha\) puede llevar a zonas menos favorables del paisaje de la función.
 \end{itemize}
 
-\subsection{Conclusión General}
-El análisis estadístico demuestra que el método de Armijo es altamente estable y eficiente para este problema. Todos los experimentos convergieron, sin presentar divergencias numéricas, oscilaciones ni estancamiento en el máximo de iteraciones. La configuración más eficiente fue \(\alpha_0 = 0.8\) y \(\beta = 0.5\), logrando el menor número promedio de iteraciones y valores finales próximos al mínimo global. Por otro lado, el parámetro \(c\) tuvo un impacto marginal en el rendimiento, lo cual coincide con la teoría clásica de métodos de búsqueda en línea.
+
+Como conclusión del análisis al ejecutar el método de Armijo, se demuestra que es altamente estable y eficiente para este problema. Todos los experimentos convergieron, sin presentar divergencias numéricas, oscilaciones ni estancamiento en el máximo de iteraciones. La configuración más eficiente fue \(\alpha_0 = 0.8\) y \(\beta = 0.5\), logrando el menor número promedio de iteraciones y valores finales próximos al mínimo global. Por otro lado, el parámetro \(c\) tuvo un impacto marginal en el rendimiento, lo cual coincide con la teoría clásica de métodos de búsqueda en línea.
 
 Estos resultados indican que, cuando se requiere robustez y estabilidad ante cambios en el punto inicial o en la estructura local de la función, la regla de Armijo constituye una alternativa ampliamente superior al uso de un valor fijo de tasa de aprendizaje.
+
+
+\section{Resultados numéricos}
+De todos los experimentos realizados se decidió escoger y analizar la ejecución
+de ambos algoritmos a partir del punto inicial
+$x_0 = (1.0227,\,0.3033)$.
+Dicho punto fue seleccionado con el objetivo de realizar un análisis exploratorio interesante
+pues se encuentra en una región del dominio donde la función presenta alta
+curvatura en la variable $x$ y un gradiente de magnitud moderada.
+
+Esta elección permite evaluar de manera clara la sensibilidad de los algoritmos
+a la geometría local de la función y a la selección del tamaño de paso.
+Asimismo, se consideraron dos valores del learning rate para el método de paso fijo:
+$lr = 0.1$ y $lr = 0.3$, con el fin de analizar tanto un escenario moderado como uno
+claramente desfavorable para dicho método.
+
+
+\subsection{Trayectorias sobre curvas de nivel}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{graficas/trayectorias_lr_0.1.png}
+\caption{Trayectorias del GD con paso fijo y del método de Armijo para $lr=0.1$.}
+\label{fig:tray_01}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{graficas/trayectorias_lr_0.3.png}
+\caption{Trayectorias del GD con paso fijo y del método de Armijo para $lr=0.3$.}
+\label{fig:tray_03}
+\end{figure}
+
+En las Figuras \ref{fig:tray_01} y \ref{fig:tray_03} se observan las trayectorias
+seguidas por ambos métodos sobre las curvas de nivel de la función objetivo.
+El comportamiento observado está directamente relacionado con la geometría local
+de la función alrededor del punto inicial.
+
+Para $lr=0.1$, el descenso por gradiente con paso fijo presenta una trayectoria
+oscilante que no sigue una dirección de descenso consistente.
+Esto se debe a que el tamaño de paso constante no se adapta a la curvatura de la
+función, provocando que el algoritmo sobrepase repetidamente el valle del mínimo.
+En contraste, el método de Armijo ajusta dinámicamente el tamaño de paso en cada
+iteración, permitiendo desplazamientos más pequeños en regiones de alta curvatura
+y dando lugar a una trayectoria suave y estable hacia una región de mínimo.
+
+
+Para $lr=0.3$, el método de paso fijo se aleja rápidamente de la región de interés,
+ya que el tamaño de paso es excesivo para la magnitud del gradiente en el punto
+inicial. Esto provoca actualizaciones demasiado grandes que llevan al algoritmo
+fuera del dominio relevante. En contraste, el método de Armijo reduce
+automáticamente el tamaño de paso cuando no se satisface la condición de descenso
+suficiente, manteniendo una trayectoria controlada y estable hacia el mínimo.
+
+
+\subsection{Evolución del valor de la función}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{graficas/f_vs_iter_lr_0.1.png}
+\caption{Valor de la función objetivo vs iteraciones para $lr=0.1$.}
+\label{fig:f_01}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{graficas/f_vs_iter_lr_0.3.png}
+\caption{Valor de la función objetivo vs iteraciones para $lr=0.3$.}
+\label{fig:f_03}
+\end{figure}
+
+La Figura \ref{fig:f_01} muestra que, para $lr=0.1$, el descenso por gradiente con
+paso fijo presenta oscilaciones pronunciadas en el valor de la función.
+Este comportamiento se debe a que el tamaño de paso constante produce
+actualizaciones que alternan entre regiones de mayor y menor valor de la función,
+sin garantizar una disminución monótona.
+
+En contraste, el método de Armijo asegura que cada iteración cumpla una condición
+de descenso suficiente, lo que se traduce en una disminución estable y progresiva
+del valor de la función hasta alcanzar un mínimo local.
+
+Para $lr=0.3$ (Figura \ref{fig:f_03}), el tamaño de paso fijo resulta excesivo para
+la región del dominio en la que se encuentra el punto inicial.
+Como consecuencia, el algoritmo produce actualizaciones demasiado grandes que
+incrementan drásticamente el valor de la función, generando una divergencia
+numérica. El método de Armijo evita este comportamiento al reducir el tamaño de
+paso cuando el descenso propuesto no es adecuado, manteniendo un comportamiento
+estable y decreciente.
+
+
+\subsection{Norma del gradiente}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{graficas/gradiente_vs_iter_lr_0.1.png}
+\caption{Norma del gradiente en escala logarítmica para $lr=0.1$.}
+\label{fig:grad_01}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{graficas/gradiente_vs_iter_lr_0.3.png}
+\caption{Norma del gradiente en escala logarítmica para $lr=0.3$.}
+\label{fig:grad_03}
+\end{figure}
+
+En las Figuras \ref{fig:grad_01} y \ref{fig:grad_03} se observa que el método de
+Armijo reduce progresivamente la norma del gradiente hasta valores cercanos a
+cero, lo que indica convergencia hacia un punto crítico. 
+Por el contrario, el descenso por gradiente con paso fijo mantiene normas elevadas
+u oscilantes, ya que el tamaño de paso constante no permite una reducción
+controlada del gradiente en regiones de alta curvatura.
+Para valores grandes del learning rate, como $lr=0.3$, este efecto se amplifica y
+la norma del gradiente crece rápidamente, evidenciando la divergencia del método.
+
+
+\subsection{Limitaciones del descenso por gradiente con paso fijo}
+El comportamiento observado del descenso por gradiente con paso fijo no se debe
+a errores de implementación, sino a limitaciones inherentes al método cuando se
+aplica a funciones no convexas y mal condicionadas.
+
+En particular, la función considerada presenta regiones con curvatura elevada en
+la variable $x$ debido al término $x^4$, lo que provoca gradientes de gran magnitud.
+Dado que el método utiliza un tamaño de paso constante, no existe un mecanismo que
+adapte el desplazamiento a la geometría local de la función, lo que puede conducir
+a oscilaciones o divergencia.
+
+Además, el criterio de paro utilizado se basa en el cambio entre iteraciones
+consecutivas, lo cual no garantiza una disminución monótona del valor de la función
+ni de la norma del gradiente. Este efecto se ve amplificado para valores grandes
+del learning rate, como $lr=0.3$, donde el método abandona rápidamente la región
+relevante del dominio.
+
+Por estas razones, el descenso por gradiente con paso fijo resulta altamente
+sensible a la elección del tamaño de paso y del punto inicial, mientras que el
+método de Armijo, al incorporar una búsqueda de línea adaptativa, logra una mayor
+estabilidad y robustez en todos los escenarios considerados.
+
+
+
+
 
 \section{Conclusión General}
 
 El análisis comparativo entre el descenso por gradiente con tasa de aprendizaje fija y el método con búsqueda en línea mediante la regla de Armijo permite establecer diferencias claras en estabilidad, robustez y eficiencia, utilizando exclusivamente los datos obtenidos durante las ejecuciones experimentales.
 
-En primer lugar, el algoritmo con \textbf{tasa de aprendizaje fija} mostró un comportamiento altamente sensible al valor del parámetro. Para valores pequeños de $lr$ el proceso converge, pero lo hace de manera lenta y con un número elevado de iteraciones. A medida que el $lr$ se incrementa, el método comienza a presentar oscilaciones, y a partir de $lr \geq 0.2$ los experimentos mostraron divergencia sistemática debido a incrementos descontrolados en la norma del gradiente y errores numéricos por desbordamiento. Estos resultados confirman la limitada región de estabilidad del método cuando el paso no se ajusta dinámicamente.
+En primer lugar, el algoritmo con tasa de aprendizaje fija mostró un comportamiento altamente sensible al valor del parámetro. Para valores pequeños de $lr$ el proceso converge, pero lo hace de manera lenta y con un número elevado de iteraciones. A medida que el $lr$ se incrementa, el método comienza a presentar oscilaciones, y a partir de $lr \geq 0.2$ los experimentos mostraron divergencia sistemática debido a incrementos descontrolados en la norma del gradiente y errores numéricos por desbordamiento. Estos resultados confirman la limitada región de estabilidad del método cuando el paso no se ajusta dinámicamente.
 
-En contraste, el método de \textbf{búsqueda en línea con Armijo} logró convergencia en todos los casos donde el gradiente no era numéricamente degenerado. Gracias al ajuste adaptativo del paso, el algoritmo evitó las oscilaciones y la divergencia incluso cuando el valor inicial de $\alpha$ era grande. Los datos muestran que Armijo fue capaz de reducir el paso de manera automática cuando la función no satisfacía la condición de descenso suficiente, garantizando estabilidad global y trayectorias de descenso más controladas.
+En contraste, el método de búsqueda en línea con Armijo logró convergencia en todos los casos donde el gradiente no era numéricamente degenerado. Gracias al ajuste adaptativo del paso, el algoritmo evitó las oscilaciones y la divergencia incluso cuando el valor inicial de $\alpha$ era grande. Los datos muestran que Armijo fue capaz de reducir el paso de manera automática cuando la función no satisfacía la condición de descenso suficiente, garantizando estabilidad global y trayectorias de descenso más controladas.
 
-Comparando ambos métodos en conjunto, se observa que Armijo ofrece una \textbf{mayor robustez} al no depender críticamente de la elección manual de un $lr$ adecuado. Además, dado que ajusta dinámicamente el tamaño de paso, la trayectoria hacia el mínimo es más eficiente que en el caso de tasas fijas pequeñas, sin incurrir en los riesgos de explosión numérica que aparecen con tasas fijas grandes. En términos de confiabilidad y consistencia, el descenso con Armijo resulta claramente superior.
+Asimismo, las conclusiones analíticas derivadas de los datos numéricos se ven plenamente corroboradas por el análisis gráfico.
+Las trayectorias sobre las curvas de nivel, la evolución del valor de la función y la norma del gradiente reflejan de manera consistente los fenómenos observados cuantitativamente: oscilaciones y divergencia en el método de paso fijo para tasas grandes, y un descenso monótono, estable y controlado en el método de Armijo.
+
+Comparando ambos métodos en conjunto, se observa que Armijo ofrece una mayor robustez al no depender críticamente de la elección manual de un $lr$ adecuado. Además, dado que ajusta dinámicamente el tamaño de paso, la trayectoria hacia el mínimo es más eficiente que en el caso de tasas fijas pequeñas, sin incurrir en los riesgos de explosión numérica que aparecen con tasas fijas grandes. En términos de confiabilidad y consistencia, el descenso con Armijo resulta claramente superior.
 
 En conclusión, los resultados obtenidos indican que, para problemas donde la forma de la función objetivo o la escala del gradiente no se conocen a priori, el método con búsqueda en línea tipo Armijo representa una alternativa más estable, segura y eficiente que el descenso con tasa de aprendizaje fija, ofreciendo convergencia confiable sin necesidad de calibración manual del parámetro de paso.
-
-
 
 
 \end{document}
